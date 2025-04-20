@@ -650,8 +650,8 @@ export default class OpenAIProvider extends BaseProvider {
 
     await this.checkIsCopilot()
 
-    // @ts-ignore key is not typed
     console.debug('[summaries] reqMessages', model.id, [systemMessage, userMessage])
+    // @ts-ignore key is not typed
     const response = await this.sdk.chat.completions.create({
       model: model.id,
       messages: [systemMessage, userMessage] as ChatCompletionMessageParam[],
