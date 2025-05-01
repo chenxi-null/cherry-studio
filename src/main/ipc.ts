@@ -157,6 +157,22 @@ export function registerIpc(mainWindow: BrowserWindow, app: Electron.App) {
     })
   })
 
+  // Forward model update events to mini window
+  ipcMain.on('model-settings-update', (event, data) => {
+    const senderWindowId = event.sender.id
+    const windows = BrowserWindow.getAllWindows()
+
+    // Log the event
+    log.info('[ipc] Forwarding model-settings-update event', data);
+
+    // Forward to all other windows
+    windows.forEach((win) => {
+      if (win.webContents.id !== senderWindowId) {
+        win.webContents.send('model-settings-update', data)
+      }
+    })
+  })
+
   // clear cache
   ipcMain.handle(IpcChannel.App_ClearCache, async () => {
     const sessions = [session.defaultSession, session.fromPartition('persist:webview')]

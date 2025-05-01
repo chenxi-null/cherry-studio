@@ -244,9 +244,54 @@ const HomeWindow: FC = () => {
       action === 'chat' && onSendMessage()
     })
 
+    // Listen for direct model updates from the main window
+    const modelUpdateListener = window.electron.ipcRenderer.on('model-settings-update', (_, data) => {
+      console.log('[HomeWindow] Received model-settings-update event:', data)
+
+      // Instead of reloading, directly update the Redux store
+      if (data.type === 'defaultModel' && data.model) {
+        try {
+          // Import needed components dynamically to avoid circular dependencies
+          import('@renderer/store').then(({ default: store }) => {
+            import('@renderer/store/llm').then(({ setDefaultModel }) => {
+              // Update the store directly
+              store.dispatch(setDefaultModel({ model: data.model }))
+
+              // Force a re-render of the component by updating a state
+              setText((prevText) => prevText + '') // This is a hack to force re-render
+
+              // Show notification
+              window.message.success('Model settings updated')
+            })
+          })
+        } catch (error) {
+          console.error('[HomeWindow] Error updating model:', error)
+          // Fallback to reload if direct update fails
+          window.location.reload()
+        }
+      } else {
+        // Fallback to reload for other types of updates
+        window.location.reload()
+      }
+    })
+
+    // Setup a refresh mechanism when window becomes visible
+    // This ensures we have the latest model settings when the mini window is shown
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[HomeWindow] Window became visible, refreshing...')
+        // Force a redux store sync from storage to get latest model settings
+        window.location.reload()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
     return () => {
       window.electron.ipcRenderer.removeAllListeners(IpcChannel.ShowMiniWindow)
       window.electron.ipcRenderer.removeAllListeners(IpcChannel.SelectionAction)
+      modelUpdateListener()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [onWindowShow, onSendMessage, setRoute])
 

@@ -584,6 +584,12 @@ const llmSlice = createSlice({
     setDefaultModel: (state, action: PayloadAction<{ model: Model }>) => {
       state.defaultModel = action.payload.model
       window.electron.ipcRenderer.send(IpcChannel.MiniWindowReload)
+      // Send a direct model update message that the mini window can listen for
+      console.log('[setDefaultModel] Sending model-settings-update event:', action.payload.model)
+      window.electron.ipcRenderer.send('model-settings-update', {
+        type: 'defaultModel',
+        model: action.payload.model
+      })
     },
     setTopicNamingModel: (state, action: PayloadAction<{ model: Model }>) => {
       state.topicNamingModel = action.payload.model

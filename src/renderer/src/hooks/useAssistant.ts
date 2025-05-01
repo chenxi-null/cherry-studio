@@ -103,7 +103,20 @@ export function useDefaultModel() {
     defaultModel,
     topicNamingModel,
     translateModel,
-    setDefaultModel: (model: Model) => dispatch(setDefaultModel({ model })),
+    setDefaultModel: (model: Model) => {
+      dispatch(setDefaultModel({ model }))
+
+      // Send direct notification to mini window
+      console.log('[useDefaultModel] Sending model-settings-update event:', model)
+      try {
+        window.electron.ipcRenderer.send('model-settings-update', {
+          type: 'defaultModel',
+          model
+        })
+      } catch (error) {
+        console.error('[useDefaultModel] Error sending model update:', error)
+      }
+    },
     setTopicNamingModel: (model: Model) => dispatch(setTopicNamingModel({ model })),
     setTranslateModel: (model: Model) => dispatch(setTranslateModel({ model }))
   }
