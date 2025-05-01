@@ -559,6 +559,13 @@ export default class OpenAIProvider extends BaseProvider {
               text: thinkingContent,
               thinking_millsec: final_time_thinking_millsec_delta
             })
+
+            // FIXME: 临时方案，重置时间戳和思考内容
+            time_first_token_millsec = 0
+            time_first_content_millsec = 0
+            thinkingContent = ''
+            isFirstThinkingChunk = true
+            hasReasoningContent = false
           }
         }
 
@@ -962,26 +969,41 @@ export default class OpenAIProvider extends BaseProvider {
   /**
    * Check if the model is valid
    * @param model - The model
+   * @param stream - Whether to use streaming interface
    * @returns The validity of the model
    */
-  public async check(model: Model): Promise<{ valid: boolean; error: Error | null }> {
+  public async check(model: Model, stream: boolean = false): Promise<{ valid: boolean; error: Error | null }> {
     if (!model) {
       return { valid: false, error: new Error('No model found') }
     }
     const body = {
       model: model.id,
       messages: [{ role: 'user', content: 'hi' }],
-      stream: false
+      stream
     }
 
     try {
       await this.checkIsCopilot()
       console.debug('[checkModel] body', model.id, body)
-      const response = await this.sdk.chat.completions.create(body as ChatCompletionCreateParamsNonStreaming)
-
-      return {
-        valid: Boolean(response?.choices[0].message),
-        error: null
+      if (!stream) {
+        const response = await this.sdk.chat.completions.create(body as ChatCompletionCreateParamsNonStreaming)
+        if (!response?.choices[0].message) {
+          throw new Error('Empty response')
+        }
+        return { valid: true, error: null }
+      } else {
+        const response: any = await this.sdk.chat.completions.create(body as any)
+        // 等待整个流式响应结束
+        let hasContent = false
+        for await (const chunk of response) {
+          if (chunk.choices?.[0]?.delta?.content) {
+            hasContent = true
+          }
+        }
+        if (hasContent) {
+          return { valid: true, error: null }
+        }
+        throw new Error('Empty streaming response')
       }
     } catch (error: any) {
       return {
