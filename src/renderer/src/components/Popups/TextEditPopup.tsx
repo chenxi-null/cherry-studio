@@ -32,6 +32,13 @@ const PopupContainer: React.FC<Props> = ({ text, textareaProps, modalProps, reso
   const textareaRef = useRef<TextAreaRef>(null)
   const { translateModel } = useDefaultModel()
   const { targetLanguage, showTranslateConfirm } = useSettings()
+  const isMounted = useRef(true)
+
+  useEffect(() => {
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
 
   const onOk = () => {
     setOpen(false)
@@ -90,11 +97,16 @@ const PopupContainer: React.FC<Props> = ({ text, textareaProps, modalProps, reso
       return
     }
 
-    setIsTranslating(true)
+    if (isMounted.current) {
+      setIsTranslating(true)
+    }
+
     try {
       const assistant = getDefaultTranslateAssistant(targetLanguage, textValue)
       const translatedText = await fetchTranslate({ content: textValue, assistant })
-      setTextValue(translatedText)
+      if (isMounted.current) {
+        setTextValue(translatedText)
+      }
     } catch (error) {
       console.error('Translation failed:', error)
       window.message.error({
@@ -102,7 +114,9 @@ const PopupContainer: React.FC<Props> = ({ text, textareaProps, modalProps, reso
         key: 'translate-message'
       })
     } finally {
-      setIsTranslating(false)
+      if (isMounted.current) {
+        setIsTranslating(false)
+      }
     }
   }
 
@@ -133,7 +147,10 @@ const PopupContainer: React.FC<Props> = ({ text, textareaProps, modalProps, reso
           onInput={resizeTextArea}
           onChange={(e) => setTextValue(e.target.value)}
         />
-        <TranslateButton onClick={handleTranslate} disabled={isTranslating || !textValue.trim()}>
+        <TranslateButton
+          onClick={handleTranslate}
+          aria-label="Translate text"
+          disabled={isTranslating || !textValue.trim()}>
           <Languages size={16} />
         </TranslateButton>
       </TextAreaContainer>
