@@ -1,7 +1,12 @@
+import { useDefaultModel } from '@renderer/hooks/useAssistant'
+import { useSettings } from '@renderer/hooks/useSettings'
+import { fetchTranslate } from '@renderer/services/ApiService'
+import { getDefaultTranslateAssistant } from '@renderer/services/AssistantService'
 import { Modal, ModalProps } from 'antd'
 import TextArea from 'antd/es/input/TextArea'
 import { TextAreaProps } from 'antd/lib/input'
 import { TextAreaRef } from 'antd/lib/input/TextArea'
+import { Languages } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
@@ -23,7 +28,10 @@ const PopupContainer: React.FC<Props> = ({ text, textareaProps, modalProps, reso
   const [open, setOpen] = useState(true)
   const { t } = useTranslation()
   const [textValue, setTextValue] = useState(text)
+  const [isTranslating, setIsTranslating] = useState(false)
   const textareaRef = useRef<TextAreaRef>(null)
+  const { translateModel } = useDefaultModel()
+  const { targetLanguage, showTranslateConfirm } = useSettings()
 
   const onOk = () => {
     setOpen(false)
@@ -62,6 +70,42 @@ const PopupContainer: React.FC<Props> = ({ text, textareaProps, modalProps, reso
     }
   }
 
+  const handleTranslate = async () => {
+    if (!textValue.trim() || isTranslating) return
+
+    if (showTranslateConfirm) {
+      const confirmed = await window?.modal?.confirm({
+        title: t('translate.confirm.title'),
+        content: t('translate.confirm.content'),
+        centered: true
+      })
+      if (!confirmed) return
+    }
+
+    if (!translateModel) {
+      window.message.error({
+        content: t('translate.error.not_configured'),
+        key: 'translate-message'
+      })
+      return
+    }
+
+    setIsTranslating(true)
+    try {
+      const assistant = getDefaultTranslateAssistant(targetLanguage, textValue)
+      const translatedText = await fetchTranslate({ content: textValue, assistant })
+      setTextValue(translatedText)
+    } catch (error) {
+      console.error('Translation failed:', error)
+      window.message.error({
+        content: t('translate.error.failed'),
+        key: 'translate-message'
+      })
+    } finally {
+      setIsTranslating(false)
+    }
+  }
+
   TextEditPopup.hide = onCancel
 
   return (
@@ -78,16 +122,21 @@ const PopupContainer: React.FC<Props> = ({ text, textareaProps, modalProps, reso
       afterClose={onClose}
       afterOpenChange={handleAfterOpenChange}
       centered>
-      <TextArea
-        ref={textareaRef}
-        rows={2}
-        autoFocus
-        spellCheck={false}
-        {...textareaProps}
-        value={textValue}
-        onInput={resizeTextArea}
-        onChange={(e) => setTextValue(e.target.value)}
-      />
+      <TextAreaContainer>
+        <TextArea
+          ref={textareaRef}
+          rows={2}
+          autoFocus
+          spellCheck={false}
+          {...textareaProps}
+          value={textValue}
+          onInput={resizeTextArea}
+          onChange={(e) => setTextValue(e.target.value)}
+        />
+        <TranslateButton onClick={handleTranslate} disabled={isTranslating || !textValue.trim()}>
+          <Languages size={16} />
+        </TranslateButton>
+      </TextAreaContainer>
       <ChildrenContainer>{children && children({ onOk, onCancel })}</ChildrenContainer>
     </Modal>
   )
@@ -97,6 +146,35 @@ const TopViewKey = 'TextEditPopup'
 
 const ChildrenContainer = styled.div`
   position: relative;
+`
+
+const TextAreaContainer = styled.div`
+  position: relative;
+`
+
+const TranslateButton = styled.button`
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--color-icon);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background-color: var(--color-background-mute);
+    color: var(--color-text-1);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `
 
 export default class TextEditPopup {
