@@ -45,7 +45,7 @@ export function useAssistant(id: string) {
 
   const model = assistant?.model ?? assistant?.defaultModel ?? defaultModel
   if (!model) {
-    throw new Error('Assistant model is not set')
+    throw new Error(`Assistant model is not set for assistant with name: ${assistant?.name ?? 'unknown'}`)
   }
 
   return {
