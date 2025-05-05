@@ -1,3 +1,4 @@
+import { LoadingOutlined } from '@ant-design/icons'
 import { useDefaultModel } from '@renderer/hooks/useAssistant'
 import { useSettings } from '@renderer/hooks/useSettings'
 import { fetchTranslate } from '@renderer/services/ApiService'
@@ -151,7 +152,7 @@ const PopupContainer: React.FC<Props> = ({ text, textareaProps, modalProps, reso
           onClick={handleTranslate}
           aria-label="Translate text"
           disabled={isTranslating || !textValue.trim()}>
-          <Languages size={16} />
+          {isTranslating ? <LoadingOutlined spin /> : <Languages size={16} />}
         </TranslateButton>
       </TextAreaContainer>
       <ChildrenContainer>{children && children({ onOk, onCancel })}</ChildrenContainer>
