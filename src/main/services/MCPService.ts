@@ -167,9 +167,13 @@ class McpService {
 
                 // Get tokens from authProvider to make sure using the latest tokens
                 if (authProvider && typeof authProvider.tokens === 'function') {
-                  const tokens = await authProvider.tokens()
-                  if (tokens && tokens.access_token) {
-                    headers['Authorization'] = `Bearer ${tokens.access_token}`
+                  try {
+                    const tokens = await authProvider.tokens()
+                    if (tokens && tokens.access_token) {
+                      headers['Authorization'] = `Bearer ${tokens.access_token}`
+                    }
+                  } catch (error) {
+                    Logger.error('Failed to fetch tokens:', error)
                   }
                 }
 
