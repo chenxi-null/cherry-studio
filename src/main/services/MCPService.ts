@@ -162,7 +162,19 @@ class McpService {
         } else if (server.type === 'sse') {
           const options: SSEClientTransportOptions = {
             eventSourceInit: {
-              fetch: (url, init) => fetch(url, { ...init, headers: server.headers || {} })
+              fetch: async (url, init) => {
+                const headers = { ...(server.headers || {}), ...(init?.headers || {}) }
+
+                // Get tokens from authProvider to make sure using the latest tokens
+                if (authProvider && typeof authProvider.tokens === 'function') {
+                  const tokens = await authProvider.tokens()
+                  if (tokens && tokens.access_token) {
+                    headers['Authorization'] = `Bearer ${tokens.access_token}`
+                  }
+                }
+
+                return fetch(url, { ...init, headers })
+              }
             },
             requestInit: {
               headers: server.headers || {}
