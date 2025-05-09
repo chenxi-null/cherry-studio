@@ -323,7 +323,7 @@ const SettingsTab: FC<Props> = (props) => {
             size="small"
             min={0}
             max={10000}
-            step={100}
+            step={5}
             value={codeFooterCopyThreshold}
             onChange={(value) => dispatch(setCodeFooterCopyThreshold(value ?? 500))}
             style={{ width: 100 }}

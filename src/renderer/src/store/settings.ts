@@ -165,7 +165,7 @@ export const initialState: SettingsState = {
   codeShowLineNumbers: false,
   codeCollapsible: false,
   codeWrappable: false,
-  codeFooterCopyThreshold: 500,
+  codeFooterCopyThreshold: 20,
   codeCacheable: false,
   codeCacheMaxSize: 1000, // 缓存最大容量，千字符数
   codeCacheTTL: 15, // 缓存过期时间，分钟
