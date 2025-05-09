@@ -611,7 +611,7 @@ export const {
   setEnableQuickPanelTriggers,
   setExportMenuOptions,
   setEnableBackspaceDeleteModel,
-  setZoomFactor
+  setZoomFactor,
   setCodeFooterCopyThreshold
 } = settingsSlice.actions
 

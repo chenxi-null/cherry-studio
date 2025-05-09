@@ -187,7 +187,7 @@
       "settings.code_cache_max_size": "キャッシュ上限",
       "settings.code_cache_max_size.tip": "キャッシュできる文字数の上限（千字符）。ハイライトされたコードの長さは純粋なテキストよりもはるかに長くなります。",
       "settings.code_cache_ttl": "キャッシュ期限",
-      "settings.code_cache_ttl.tip": "キャッシュの有効期限（分単位）。",
+      "settings.code_cache_ttl.tip": "キャッシュの有効期限（分単位）",
       "settings.code_cache_threshold": "キャッシュ閾値",
       "settings.code_cache_threshold.tip": "キャッシュできる最小のコード長（千字符）。キャッシュできる最小のコード長を超えたコードブロックのみがキャッシュされます。",
       "settings.context_count": "コンテキスト",

@@ -35,7 +35,8 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ children, className }) => {
   const childrenLengthRef = useRef(0)
   const isStreamingRef = useRef(false)
 
-  const showFooterCopyButton = children && children.length > codeFooterCopyThreshold && !codeCollapsible
+  const lineCount = children ? children.split('\n').length : 0
+  const showFooterCopyButton = children && lineCount > codeFooterCopyThreshold && !codeCollapsible
 
   const showDownloadButton = ['csv', 'json', 'txt', 'md'].includes(language)
 
